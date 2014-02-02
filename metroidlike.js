@@ -6,31 +6,60 @@
 	var palette = { yellow: "#BCB968", blue: "#8FA8A2", white: "#CCD4BD", red: "#9E3B36", brown: "#50553F" };
 	var player;
 	var platform;
+	var tilt = 0;
 
 	var powerupEmitter;
 
-	var tileSize = 96;
-	var worldSize = { x: Math.floor(window.innerWidth - (window.innerWidth % tileSize)), y: window.innerHeight - (window.innerHeight % tileSize) };
+	var tileSize;
+	//var worldSize = { x: Math.floor(window.innerWidth - (window.innerWidth % tileSize)), y: window.innerHeight - (window.innerHeight % tileSize) };
+	var worldSize;
 	var groundTiles;
 	var platformTiles;
 	var itemTiles;
 
 	var levels = [
 		[
-			"   I             ",
-			"   PP   I        ",
-			"                 ",
-			"       PP        ",			
-			"                 ",
-			"    P           I",
-			"                P",
-			"   PP          PP",
-			" I             PP",
-			"GGGGGGGGGGGGGGGGG"
+			"   I                ",
+			"   PP   I           ",
+			"                    ",
+			"       PP           ",			
+			"                    ",
+			"    P              I",
+			"                   P",
+			"   PP             PP",
+			" I                PP",
+			"GGGGGGGGGGGGGGGGGGGG"
 		]
 	];
 
-	function startGame(){
+	function startGame(level){
+		level = levels[level];
+
+		tileSize = 16;
+		var tileSizes = [ 128, 96, 64, 32, 24 ];
+		var match = false;
+		var testSize;
+
+		for(var i = 0; !match && i < tileSizes.length; i++){
+			if(level[0].length > level.length){
+				testSize = tileSizes[i] * level[0].length;
+			} else {
+				testSize = tileSizes[i] * level.length;
+			}
+			if(testSize <= window.innerWidth){
+				match = true;
+				tileSize = tileSizes[i];
+			}
+		}
+		// if(level[0].length > level.length){
+		// 	tileSize = Math.log(window.innerWidth / level[0].length);
+		// } else {
+		// 	tileSize = Math.log(window.innerHeight / level.length);
+		// }
+
+		worldSize = {};
+		worldSize.x = level[0].length * tileSize;
+		worldSize.y = level.length * tileSize;
 		game = new Phaser.Game(worldSize.x, worldSize.y, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
 	}
 
@@ -40,14 +69,11 @@
 
 	function create() {
 		game.stage.backgroundColor = palette.white;
+		game.stage.scale.maxWidth = window.innerWidth;
+		game.stage.scale.maxHeight = window.innerHeight;
+		game.stage.scale.refresh();
 
 		setupBitmapData();
-
-		powerupEmitter = game.add.emitter(0, 0, 5000);
-	    powerupEmitter.makeParticles(item);
-	    powerupEmitter.gravity = 10;
-	    powerupEmitter.minParticleScale = 0.75;
-	    powerupEmitter.maxParticleScale = 2;
 
 		platformTiles = game.add.group();
 		groundTiles = game.add.group();
@@ -57,6 +83,12 @@
 
 		player = new Player();
 		game.add.existing(player);
+
+		powerupEmitter = game.add.emitter();
+	    powerupEmitter.makeParticles(item);
+	    powerupEmitter.gravity = 10;
+	    powerupEmitter.minParticleScale = 0.05;
+	    powerupEmitter.maxParticleScale = 0.1;
 	}
 
 	function update() {
@@ -73,7 +105,10 @@
 	}
 
 	function getItem(player, item){
+		powerupEmitter.x = item.x + Math.floor(tileSize / 2);
+		powerupEmitter.y = item.y + Math.floor(tileSize / 2);
 		item.kill();
+		powerupEmitter.start(true, 1000, null, 20);
 	}
 
 	function setupBitmapData(){
@@ -95,7 +130,7 @@
 		// platformGradient.addColorStop(0.25, "rgba(143, 168, 162, 0)");
 		// platform.context.fillStyle = platformGradient;
 		platform.context.fillStyle = palette.blue;
-		platform.context.fillRect(0, 0, tileSize, Math.floor(tileSize / 4) * 3);
+		platform.context.fillRect(0, 0, tileSize, Math.floor(tileSize / 2));
 		// platform.context.strokeStyle = palette.brown;
 		// platform.context.lineWidth = 5;
 		// platform.context.beginPath();
@@ -155,7 +190,7 @@
 		// me.body.bounce.setTo(0.1, 0.1);
 		me.anchor.setTo(0.5, 0.5);
 		me.body.setSize(tileSize - 5, tileSize - 5);
-		me.body.gravity.y = 20;
+		me.body.gravity.y = tileSize / 3;
 	}
 
 	Player.prototype = Object.create(Phaser.Sprite.prototype);
@@ -166,19 +201,23 @@
 
 		me.body.velocity.x = 0;
 
-		if(me.cursors.up.isDown && me.body.touching.down){
-			me.body.velocity.y = - me.speed * 1.5;
+		if((me.cursors.up.isDown || game.input.activePointer.isDown) && me.body.touching.down){
+			me.body.velocity.y = -me.speed * 2;
 		} else if(me.cursors.down.isDown){
 			platformTiles.setAll("body.allowCollision.up", false);
 			setTimeout(function(){
 				platformTiles.setAll("body.allowCollision.up", true);
 			}, 10);
 		}
-		if(me.cursors.left.isDown){
+		if(me.cursors.left.isDown || tilt < -0.75){
 			me.body.velocity.x = -me.speed;
-		} else if(me.cursors.right.isDown){
+		} else if(me.cursors.right.isDown || tilt > 0.75){
 			me.body.velocity.x = me.speed;
-		}
+		} /*else if(tilt < -3){
+
+		} else if(tile > 3){
+
+		}*/
 	};
 
 	// Helper/Utils
@@ -190,6 +229,16 @@
 		//this.context.stroke();
 	};
 
+	function handleMotionEvent(event) {
+		if(window.innerWidth > window.innerHeight){
+	    	tilt = event.accelerationIncludingGravity.y;
+	    } else {
+	    	tilt = -event.accelerationIncludingGravity.x;
+	    }
+	}
+
+	window.addEventListener("devicemotion", handleMotionEvent, true);
+
 	// Start the game
-	startGame();
+	startGame(0);
 })();
