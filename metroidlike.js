@@ -17,12 +17,12 @@
 
 	var levels = [
 		[
-			"                 ",
+			"   I             ",
 			"   PP   I        ",
 			"                 ",
 			"       PP        ",			
 			"                 ",
-			"    P            ",
+			"    P           I",
 			"                P",
 			"   PP          PP",
 			" I             PP",
@@ -31,7 +31,7 @@
 	];
 
 	function startGame(){
-		game = new Phaser.Game(worldSize.x, worldSize.y, Phaser.CANVAS, 'container', { preload: preload, create: create, update: update, render: render });
+		game = new Phaser.Game(worldSize.x, worldSize.y, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
 	}
 
 	function preload() {
@@ -90,14 +90,18 @@
 		// circle.context.stroke();
 
 		platform = game.add.bitmapData(tileSize, tileSize);
+		// var platformGradient = platform.context.createLinearGradient(0, 0, 0, platform.height);
+		// platformGradient.addColorStop(0, palette.blue);
+		// platformGradient.addColorStop(0.25, "rgba(143, 168, 162, 0)");
+		// platform.context.fillStyle = platformGradient;
 		platform.context.fillStyle = palette.blue;
-		platform.context.fillRect(0, 0, tileSize, tileSize);
-		platform.context.strokeStyle = palette.brown;
-		platform.context.lineWidth = 5;
-		platform.context.beginPath();
-		platform.context.moveTo(0, 0);
-		platform.context.lineTo(tileSize, 0);
-		platform.context.stroke();
+		platform.context.fillRect(0, 0, tileSize, Math.floor(tileSize / 4) * 3);
+		// platform.context.strokeStyle = palette.brown;
+		// platform.context.lineWidth = 5;
+		// platform.context.beginPath();
+		// platform.context.moveTo(0, 0);
+		// platform.context.lineTo(tileSize, 0);
+		// platform.context.stroke();
 
 		item = game.add.bitmapData(tileSize, tileSize);
 		item.context.fillStyle = palette.yellow;
