@@ -7,6 +7,8 @@
 	var player;
 	var platform;
 
+	var powerupEmitter;
+
 	var tileSize = 96;
 	var worldSize = { x: Math.floor(window.innerWidth - (window.innerWidth % tileSize)), y: window.innerHeight - (window.innerHeight % tileSize) };
 	var groundTiles;
@@ -15,16 +17,16 @@
 
 	var levels = [
 		[
-			"           ",
-			"   PP   I  ",
-			"           ",
-			"       PP  ",			
-			"           ",
-			"    P      ",
-			"          P",
-			"   PP    PP",
-			"         PP",
-			"GGGGGGGGGGG"
+			"                 ",
+			"   PP   I        ",
+			"                 ",
+			"       PP        ",			
+			"                 ",
+			"    P            ",
+			"                P",
+			"   PP          PP",
+			" I             PP",
+			"GGGGGGGGGGGGGGGGG"
 		]
 	];
 
@@ -41,6 +43,12 @@
 
 		setupBitmapData();
 
+		powerupEmitter = game.add.emitter(0, 0, 5000);
+	    powerupEmitter.makeParticles(item);
+	    powerupEmitter.gravity = 10;
+	    powerupEmitter.minParticleScale = 0.75;
+	    powerupEmitter.maxParticleScale = 2;
+
 		platformTiles = game.add.group();
 		groundTiles = game.add.group();
 		itemTiles = game.add.group();
@@ -54,13 +62,18 @@
 	function update() {
 		game.physics.collide(player, platformTiles);
 		game.physics.collide(player, groundTiles);
+		game.physics.overlap(player, itemTiles, getItem);
 		player.update();
 	}
 
 	function render() {
-		// game.debug.renderRectangle(player.body);
+		// game.debug.renderRectangle(itemTiles.getAt(0).body);
 		// game.debug.renderInputInfo(50, 50);
 		// game.debug.renderQuadTree(game.physics.quadTree);
+	}
+
+	function getItem(player, item){
+		item.kill();
 	}
 
 	function setupBitmapData(){
@@ -109,6 +122,7 @@
 					tile.body.immovable = true;
 				} else if(code == "I"){
 					tile = itemTiles.create(j * tileSize, i * tileSize, item);
+					tile.body.setSize(16, 16, tileSize / 2 - 8, tileSize / 2 - 8);
 				}
 				if(tile){
 					// tile.body.setSize(60, 60, 2, 2);
