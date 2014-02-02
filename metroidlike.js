@@ -2,19 +2,21 @@
 	var game;
 	var circle;
 	var ground;
+	var item;
 	var palette = { yellow: "#BCB968", blue: "#8FA8A2", white: "#CCD4BD", red: "#9E3B36", brown: "#50553F" };
 	var player;
 	var platform;
 
-	var tileSize = 64;
+	var tileSize = 96;
 	var worldSize = { x: Math.floor(window.innerWidth - (window.innerWidth % tileSize)), y: window.innerHeight - (window.innerHeight % tileSize) };
 	var groundTiles;
 	var platformTiles;
+	var itemTiles;
 
 	var levels = [
 		[
 			"           ",
-			"   PP      ",
+			"   PP   I  ",
 			"           ",
 			"       PP  ",			
 			"           ",
@@ -41,6 +43,7 @@
 
 		platformTiles = game.add.group();
 		groundTiles = game.add.group();
+		itemTiles = game.add.group();
 
 		createWorld(levels[0]);
 
@@ -82,6 +85,16 @@
 		platform.context.moveTo(0, 0);
 		platform.context.lineTo(tileSize, 0);
 		platform.context.stroke();
+
+		item = game.add.bitmapData(tileSize, tileSize);
+		item.context.fillStyle = palette.yellow;
+		item.context.beginPath();
+		item.context.moveTo(Math.floor(item.width / 2), 0);
+		item.context.lineTo(tileSize, Math.floor(item.height / 2));
+		item.context.lineTo(Math.floor(item.width / 2), item.height);
+		item.context.lineTo(0, Math.floor(item.height / 2));
+		item.context.lineTo(Math.floor(item.width / 2), 0);
+		item.context.fill();
 	}
 
 	function createWorld(level){
@@ -94,8 +107,8 @@
 				} else if(code == "P"){
 					tile = platformTiles.create(j * tileSize, i * tileSize, platform);
 					tile.body.immovable = true;
-				} else {
-
+				} else if(code == "I"){
+					tile = itemTiles.create(j * tileSize, i * tileSize, item);
 				}
 				if(tile){
 					// tile.body.setSize(60, 60, 2, 2);
@@ -118,9 +131,9 @@
 		me.speed = tileSize * 5;
 		me.cursors = game.input.keyboard.createCursorKeys();
 
-		Phaser.Sprite.call(me, game, 0, 32, circle);
+		Phaser.Sprite.call(me, game, tileSize / 2, 0, circle);
 
-		me.body.collideWorldBounds = true;
+		// me.body.collideWorldBounds = true;
 		// me.body.bounce.setTo(0.1, 0.1);
 		me.anchor.setTo(0.5, 0.5);
 		me.body.setSize(tileSize - 5, tileSize - 5);
@@ -136,9 +149,12 @@
 		me.body.velocity.x = 0;
 
 		if(me.cursors.up.isDown && me.body.touching.down){
-			me.body.velocity.y = - me.speed * 2;
+			me.body.velocity.y = - me.speed * 1.5;
 		} else if(me.cursors.down.isDown){
-
+			platformTiles.setAll("body.allowCollision.up", false);
+			setTimeout(function(){
+				platformTiles.setAll("body.allowCollision.up", true);
+			}, 10);
 		}
 		if(me.cursors.left.isDown){
 			me.body.velocity.x = -me.speed;
