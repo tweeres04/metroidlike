@@ -14,18 +14,15 @@
 	var levels = [
 		[
 			"           ",
+			"   PP      ",
 			"           ",
+			"       PP  ",			
 			"           ",
-			"           ",			
-			"           ",
-			"           ",
+			"    P      ",
 			"          P",
 			"   PP    PP",
 			"         PP",
 			"GGGGGGGGGGG"
-		],
-		[
-			"PGPGP"
 		]
 	];
 
@@ -40,19 +37,7 @@
 	function create() {
 		game.stage.backgroundColor = palette.white;
 
-		circle = game.add.bitmapData(tileSize, tileSize);
-		// circle.context.strokeStyle = "#000";
-		// circle.context.lineWidth = 3;
-		circle.context.fillStyle = palette.red;
-		circle.circle(Math.floor(tileSize / 2), Math.floor(tileSize / 2), Math.floor(tileSize / 2) - Math.round(circle.context.lineWidth / 2), true);
-
-		ground = game.add.bitmapData(tileSize, tileSize);
-		ground.context.fillStyle = palette.brown;
-		ground.context.fillRect(0, 0, tileSize, tileSize);
-
-		platform = game.add.bitmapData(tileSize, tileSize);
-		platform.context.fillStyle = palette.blue;
-		platform.context.fillRect(0, 0, tileSize, tileSize);
+		setupBitmapData();
 
 		platformTiles = game.add.group();
 		groundTiles = game.add.group();
@@ -75,6 +60,30 @@
 		// game.debug.renderQuadTree(game.physics.quadTree);
 	}
 
+	function setupBitmapData(){
+		circle = game.add.bitmapData(tileSize, tileSize);
+		// circle.context.lineWidth = 3;
+		circle.context.fillStyle = palette.red;
+		circle.circle(Math.floor(tileSize / 2), Math.floor(tileSize / 2), Math.floor(tileSize / 2) - Math.round(circle.context.lineWidth / 2), true);
+
+		ground = game.add.bitmapData(tileSize, tileSize);
+		ground.context.fillStyle = palette.brown;
+		ground.context.fillRect(0, 0, tileSize, tileSize);
+		// circle.context.moveTo(0, 0);
+		// circle.context.lineTo(0, tileSize);
+		// circle.context.stroke();
+
+		platform = game.add.bitmapData(tileSize, tileSize);
+		platform.context.fillStyle = palette.blue;
+		platform.context.fillRect(0, 0, tileSize, tileSize);
+		platform.context.strokeStyle = palette.brown;
+		platform.context.lineWidth = 5;
+		platform.context.beginPath();
+		platform.context.moveTo(0, 0);
+		platform.context.lineTo(tileSize, 0);
+		platform.context.stroke();
+	}
+
 	function createWorld(level){
 		var tile;
 		for(var i = 0; i < level.length; i++){
@@ -82,7 +91,6 @@
 				var code = level[i][j];
 				if(code == "G"){
 					tile = groundTiles.create(j * tileSize, i * tileSize, ground);
-					tile.body.immovable = true;
 				} else if(code == "P"){
 					tile = platformTiles.create(j * tileSize, i * tileSize, platform);
 					tile.body.immovable = true;
@@ -94,12 +102,20 @@
 				}
 			}
 		}
+		groundTiles.setAll("body.immovable", true);
+		groundTiles.setAll("body.allowCollision.left", false);
+		groundTiles.setAll("body.allowCollision.right", false);
+		groundTiles.setAll("body.allowCollision.down", false);
+		platformTiles.setAll("body.immovable", true);
+		platformTiles.setAll("body.allowCollision.left", false);
+		platformTiles.setAll("body.allowCollision.right", false);
+		platformTiles.setAll("body.allowCollision.down", false);
 	}
 
 	// Classes
 	function Player(){
 		var me = this;
-		me.speed = tileSize * 10;
+		me.speed = tileSize * 5;
 		me.cursors = game.input.keyboard.createCursorKeys();
 
 		Phaser.Sprite.call(me, game, 0, 32, circle);
@@ -120,7 +136,7 @@
 		me.body.velocity.x = 0;
 
 		if(me.cursors.up.isDown && me.body.touching.down){
-			me.body.velocity.y = -me.speed;
+			me.body.velocity.y = - me.speed * 2;
 		} else if(me.cursors.down.isDown){
 
 		}
